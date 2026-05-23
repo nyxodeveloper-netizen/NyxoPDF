@@ -75,8 +75,8 @@
 
         .kora-avatar {
             position: relative; 
-            width: 180px; /* AUMENTADO de 140px */
-            height: 240px; /* AUMENTADO de 180px */
+            width: 180px; 
+            height: 240px; 
             z-index: 2; 
             filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.5));
             overflow: hidden;
@@ -389,9 +389,8 @@
             const lines = [
                 '> ACCESSING CORE...',
                 '> BYPASSING SECURITY...',
-                '> ENCRYPTING DATA STREAM...',
-                '> COMPILING PDF OBJECT...',
-                '> OPTIMIZING IMAGES...',
+                '> ANALYZING IMAGE ASPECT RATIOS...',
+                '> COMPILING DYNAMIC PDF PAGES...',
                 '> ✅ COMPILE SUCCESS.'
             ];
             let i = 0;
@@ -416,42 +415,36 @@
 
             runHackerEffect(async () => {
                 try {
-                    const pdf = new jsPDF({ 
-                        format: 'a4', 
-                        compress: true,
-                        unit: 'mm',
-                        orientation: 'portrait'
-                    });
-                    const pageW = pdf.internal.pageSize.getWidth();
-                    const pageH = pdf.internal.pageSize.getHeight();
-                    
+                    // Creamos el PDF sin formato fijo inicial
+                    const pdf = new jsPDF({ unit: 'mm' });
+                    // Eliminamos la página vacía que crea jsPDF por defecto
+                    pdf.deletePage(1);
+
+                    const maxDimMm = 250; // Tamaño máximo para evitar archivos gigantes
+
                     for(let i=0; i<imagesData.length; i++) {
-                        if(i>0) pdf.addPage();
                         const img = imagesData[i];
-                        const imgRatio = img.width / img.height;
-                        const pageRatio = pageW / pageH;
                         
-                        let fW, fH;
-                        
-                        // Ajuste perfecto sin espacios blancos
-                        if (imgRatio > pageRatio) {
-                            // Imagen más ancha
-                            fW = pageW;
-                            fH = pageW / imgRatio;
+                        // Calculamos la relación de aspecto exacta
+                        const ratio = img.width / img.height;
+                        let pageW, pageH;
+
+                        // Si la imagen es más ancha que alta
+                        if (ratio >= 1) {
+                            pageW = maxDimMm;
+                            pageH = maxDimMm / ratio;
                         } else {
-                            // Imagen más alta
-                            fH = pageH;
-                            fW = pageH * imgRatio;
+                            // Si la imagen es más alta que ancha (vertical)
+                            pageH = maxDimMm;
+                            pageW = maxDimMm * ratio;
                         }
+
+                        // Creamos la página con el tamaño EXACTO de la foto
+                        pdf.addPage([pageW, pageH]);
                         
-                        // Centrar imagen
-                        const x = (pageW - fW) / 2;
-                        const y = (pageH - fH) / 2;
-                        
+                        // Colocamos la imagen llenando toda la página (0,0)
                         const format = img.name.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG';
-                        
-                        // Imagen SIN marca de agua - limpia
-                        pdf.addImage(img.data, format, x, y, fW, fH, undefined, 'FAST');
+                        pdf.addImage(img.data, format, 0, 0, pageW, pageH);
                     }
 
                     generatedPDF = pdf;
@@ -478,7 +471,7 @@
                     const pdfData = generatedPDF.output('datauristring');
                     const link = document.createElement('a');
                     link.href = pdfData;
-                    link.download = `NYXO_DOCUMENT_${timestamp}.pdf`;
+                    link.download = `NYXO_${timestamp}.pdf`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
@@ -514,7 +507,7 @@
                     const response = await fetch(pdfBlobUrl);
                     const blob = await response.blob();
                     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-                    const file = new File([blob], `NYXO_DOCUMENT_${timestamp}.pdf`, {
+                    const file = new File([blob], `NYXO_${timestamp}.pdf`, {
                         type: 'application/pdf'
                     });
 
