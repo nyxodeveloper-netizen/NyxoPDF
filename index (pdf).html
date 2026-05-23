@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NÝXO // PDF CONVERTER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-deep: #000000;
+            --neon-cyan: #00f3ff;
+            --neon-orange: #ff5e00;
+            --panel-bg: rgba(0, 15, 25, 0.9);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background: var(--bg-deep);
+            color: var(--neon-cyan);
+            font-family: 'Share Tech Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.04) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative; z-index: 10;
+            padding: 8px 12px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem; letter-spacing: 2px;            text-shadow: 0 0 8px var(--neon-cyan);
+        }
+        .neural-status {
+            font-size: 0.65rem; color: var(--neon-cyan);
+            background: rgba(0,243,255,0.1); padding: 4px 8px;
+            border-radius: 4px; border: 1px solid rgba(0,243,255,0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .kora-interface {
+            position: relative; z-index: 5;
+            flex: 1;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding-bottom: 10px;
+            max-height: 45vh;
+        }
+        
+        .kora-container {
+            position: relative; 
+            width: 90%; 
+            height: 100%;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .kora-avatar {
+            position: relative; 
+            width: 140px;
+            height: 180px;
+            z-index: 2; 
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.4));
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 243, 255, 0.6);
+            background: #000;
+        }
+
+        .kora-avatar img {
+            width: 100%; height: 100%; object-fit: cover; object-position: top;
+        }
+
+        .hud-panel {
+            position: absolute;
+            background: rgba(0, 5, 10, 0.7);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 6px 8px;
+            font-size: 0.65rem;
+            backdrop-filter: blur(2px);
+            z-index: 3;
+        }        .hud-panel h3 {
+            font-size: 0.6rem; letter-spacing: 1px; margin-bottom: 4px;
+            color: var(--neon-cyan); opacity: 0.8;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.3); padding-bottom: 2px;
+        }
+
+        .panel-sys { top: 0; left: 0; width: 45%; }
+        .panel-neural { top: 0; right: 0; width: 35%; }
+        .panel-freq { bottom: 0; left: 0; width: 40%; }
+        .panel-lang { bottom: 0; right: 0; width: 35%; text-align: center; }
+
+        .neural-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .neural-node {
+            width: 10px; height: 10px; background: rgba(0, 243, 255, 0.1);
+            border-radius: 50%; transition: 0.3s;
+        }
+        .neural-node.active { background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan); }
+        
+        .freq-bars { display: flex; align-items: flex-end; gap: 2px; height: 25px; }
+        .freq-bar { flex: 1; background: var(--neon-cyan); opacity: 0.6; transition: 0.2s; }
+        
+        .lang-percent { font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 5px var(--neon-cyan); }
+
+        .controls-area {
+            position: relative; z-index: 10;
+            background: rgba(0, 5, 10, 0.95);
+            border-top: 1px solid var(--neon-cyan);
+            padding: 10px 15px 20px 15px;
+            max-height: 55vh;
+            display: flex; flex-direction: column;
+        }
+
+        .mini-log {
+            font-size: 0.7rem; padding: 6px 10px;
+            background: rgba(0, 243, 255, 0.03);
+            border-left: 2px solid var(--neon-cyan);
+            margin-bottom: 10px;
+            color: rgba(255,255,255,0.7);
+            display: none; 
+        }
+        .mini-log.show { display: block; }
+
+        .upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .upload-btn {
+            background: rgba(0, 243, 255, 0.08); border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan); padding: 12px 5px; font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem; cursor: pointer; text-align: center; transition: 0.2s;
+            border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        }
+        .upload-btn:active { background: rgba(0, 243, 255, 0.2); transform: scale(0.96); }        .upload-btn svg { width: 28px; height: 28px; fill: var(--neon-cyan); filter: drop-shadow(0 0 4px var(--neon-cyan)); }
+        .upload-btn input { display: none; }
+
+        .generate-btn {
+            width: 100%; padding: 16px;
+            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent);
+            border: 2px solid var(--neon-cyan); color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif; font-size: 0.9rem; letter-spacing: 2px;
+            cursor: pointer; text-transform: uppercase; transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+        .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+        .generate-btn:active { transform: scale(0.98); background: var(--neon-cyan); color: #000; }
+
+        .file-counter {
+            text-align: center; padding: 4px; font-size: 0.7rem;
+            color: var(--neon-orange); margin-bottom: 8px; letter-spacing: 1px;
+        }
+
+        .hacker-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 100; display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            font-family: 'Share Tech Mono', monospace; color: var(--neon-cyan);
+        }
+        .hacker-text { font-size: 0.9rem; line-height: 1.5; text-align: center; white-space: pre-wrap; }
+        .glitch { animation: glitch-anim 0.2s infinite; text-shadow: 2px 0 var(--neon-orange), -2px 0 #00ff00; }
+        
+        .result-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 101; display: none;
+            flex-direction: column; justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal-content {
+            background: rgba(0, 10, 20, 0.9); border: 1px solid var(--neon-cyan);
+            padding: 25px; border-radius: 12px; width: 100%; max-width: 340px; text-align: center;
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.5);
+            animation: modalIn 0.3s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-content h2 {
+            color: var(--neon-cyan); margin-bottom: 8px; font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 10px var(--neon-cyan); letter-spacing: 2px;
+        }
+        .modal-content p {
+            font-size: 0.75rem; margin-bottom: 20px; opacity: 0.7;
+        }        .modal-btn {
+            width: 100%; padding: 14px; margin: 8px 0;
+            background: rgba(0, 243, 255, 0.08); border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; cursor: pointer;
+            border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center;
+            justify-content: center; gap: 10px; transition: all 0.2s;
+        }
+        .modal-btn svg { width: 22px; height: 22px; fill: var(--neon-cyan); filter: drop-shadow(0 0 4px var(--neon-cyan)); }
+        .modal-btn:hover { background: rgba(0, 243, 255, 0.2); transform: translateX(5px); }
+        .modal-btn:active { transform: scale(0.98); }
+        .modal-btn.secondary { border-color: var(--neon-orange); color: var(--neon-orange); }
+        .modal-btn.secondary svg { fill: var(--neon-orange); filter: drop-shadow(0 0 4px var(--neon-orange)); }
+        .modal-btn.secondary:hover { background: rgba(255, 94, 0, 0.15); }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes glitch-anim {
+            0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); } 100% { transform: translate(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NÝXO // PDF</h1>
+        <div class="neural-status">● LINK ACTIVE</div>
+    </div>
+
+    <div class="kora-interface">
+        <div class="kora-container">
+            <div class="hud-panel panel-sys">
+                <h3>SYS.CORE</h3>
+                <div id="cpu-text">CPU: 87.3%</div>
+            </div>
+            <div class="hud-panel panel-neural">
+                <h3>NEURAL</h3>
+                <div class="neural-grid" id="neural-grid"></div>
+            </div>
+            
+            <div class="kora-avatar">
+                <img src="https://i.postimg.cc/3wZbyC6W/k-KOR-3.jpg" alt="KORA">
+            </div>
+
+            <div class="hud-panel panel-freq">
+                <h3>FREQ</h3>
+                <div class="freq-bars" id="freq-bars"></div>
+            </div>
+            <div class="hud-panel panel-lang">
+                <h3>PROCESS</h3>
+                <div class="lang-percent" id="lang-percent">97%</div>            </div>
+        </div>
+    </div>
+
+    <div class="controls-area">
+        <div class="mini-log" id="status-message">
+            <div id="status-text"></div>
+        </div>
+
+        <div class="upload-grid">
+            <label class="upload-btn">
+                <svg viewBox="0 0 24 24"><path d="M9 2L7.17 4H4c-1.1 0-1.99.9-1.99 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm6 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                CAPTURE
+                <input type="file" accept="image/*" capture="environment" id="camera-input">
+            </label>
+            <label class="upload-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                ARCHIVE
+                <input type="file" accept="image/*" id="gallery-input">
+            </label>
+            <label class="upload-btn">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                UPLOAD
+                <input type="file" accept="image/*" multiple id="file-input">
+            </label>
+        </div>
+
+        <div class="file-counter" id="file-counter">UPLOADED: 0</div>
+        <button class="generate-btn" id="generate-btn" disabled>[ GENERATE PDF ]</button>
+    </div>
+
+    <div class="hacker-overlay" id="hacker-overlay">
+        <div class="hacker-text glitch" id="hacker-text"></div>
+    </div>
+
+    <div class="result-modal" id="result-modal">
+        <div class="modal-content">
+            <h2>✅ COMPILE SUCCESS</h2>
+            <p>Document encrypted & ready.</p>
+            
+            <button class="modal-btn" onclick="downloadPDF()">
+                <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                DOWNLOAD
+            </button>
+            
+            <button class="modal-btn" onclick="viewPDF()">
+                <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                VIEW
+            </button>
+                        <button class="modal-btn secondary" onclick="sharePDF()">
+                <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                SHARE
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        let imagesData = [];
+        let generatedPDF = null;
+        let pdfBlobUrl = null;
+
+        const inputs = [
+            document.getElementById('camera-input'),
+            document.getElementById('gallery-input'),
+            document.getElementById('file-input')
+        ];
+        const generateBtn = document.getElementById('generate-btn');
+        const fileCounter = document.getElementById('file-counter');
+        const statusMessage = document.getElementById('status-message');
+        const statusText = document.getElementById('status-text');
+        const hackerOverlay = document.getElementById('hacker-overlay');
+        const hackerText = document.getElementById('hacker-text');
+        const resultModal = document.getElementById('result-modal');
+
+        function initHUD() {
+            const grid = document.getElementById('neural-grid');
+            for(let i=0; i<6; i++) {
+                const n = document.createElement('div');
+                n.className='neural-node';
+                grid.appendChild(n);
+            }
+            const bars = document.getElementById('freq-bars');
+            for(let i=0; i<5; i++) {
+                const b = document.createElement('div');
+                b.className='freq-bar';
+                bars.appendChild(b);
+            }
+            
+            setInterval(() => {
+                document.getElementById('cpu-text').innerText = `CPU: ${(Math.random()*10+80).toFixed(1)}%`;
+                document.querySelectorAll('.neural-node').forEach(n => {
+                    n.classList.toggle('active', Math.random()>0.5);
+                });
+                document.querySelectorAll('.freq-bar').forEach(b => {
+                    b.style.height = Math.floor(Math.random()*80+20)+'%';
+                });
+                document.getElementById('lang-percent').innerText = (Math.random()*5+94).toFixed(1)+'%';
+            }, 700);        }
+        initHUD();
+
+        function showStatus(text) {
+            statusMessage.classList.add('show');
+            statusText.innerHTML = `<span style="color:var(--neon-cyan)">></span> ${text}`;
+            setTimeout(() => statusMessage.classList.remove('show'), 3000);
+        }
+
+        function processFiles(files) {
+            if(!files || !files.length) return;
+            showStatus(`SCANNING ${files.length} FILES...`);
+            Array.from(files).forEach(file => {
+                if(!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        imagesData.push({
+                            data: e.target.result,
+                            name: file.name,
+                            width: img.width,
+                            height: img.height
+                        });
+                        fileCounter.innerText = `UPLOADED: ${imagesData.length}`;
+                        generateBtn.disabled = false;
+                        showStatus(`IMAGE LOADED: ${file.name.substring(0,10)}...`);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        inputs.forEach(i => i.addEventListener('change', e => processFiles(e.target.files)));
+
+        function runHackerEffect(callback) {
+            hackerOverlay.style.display = 'flex';
+            hackerText.innerText = '';
+            const lines = [
+                '> ACCESSING CORE...',
+                '> BYPASSING SECURITY...',
+                '> ENCRYPTING DATA STREAM...',
+                '> COMPILING PDF OBJECT...',
+                '> INJECTING WATERMARK...',
+                '> WATERMARK: Compiled by Denion',
+                '> ✅ COMPILE SUCCESS.'
+            ];
+            let i = 0;
+            const timer = setInterval(() => {
+                if(i < lines.length) {                    hackerText.innerText += lines[i] + '\n';
+                    i++;
+                } else {
+                    clearInterval(timer);
+                    setTimeout(() => {
+                        hackerOverlay.style.display='none';
+                        callback();
+                    }, 600);
+                }
+            }, 300);
+        }
+
+        generateBtn.addEventListener('click', async () => {
+            if(!imagesData.length) return;
+            generateBtn.disabled = true;
+            generateBtn.innerText = '[ PROCESSING... ]';
+
+            runHackerEffect(async () => {
+                try {
+                    const pdf = new jsPDF({ format: 'a4', compress: true });
+                    const pageW = pdf.internal.pageSize.getWidth();
+                    const pageH = pdf.internal.pageSize.getHeight();
+                    
+                    for(let i=0; i<imagesData.length; i++) {
+                        if(i>0) pdf.addPage();
+                        const img = imagesData[i];
+                        const ratio = img.width/img.height;
+                        let fW, fH;
+                        if(ratio > pageW/pageH) {
+                            fW = pageW;
+                            fH = pageW/ratio;
+                        } else {
+                            fH = pageH;
+                            fW = pageH*ratio;
+                        }
+                        const format = img.name.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG';
+                        pdf.addImage(img.data, format, 0, 0, fW, fH);
+                        
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(150);
+                        pdf.text('Compiled by Denion', 5, pageH - 5);
+                    }
+
+                    generatedPDF = pdf;
+                    pdfBlobUrl = URL.createObjectURL(pdf.output('blob'));
+                    
+                    resultModal.style.display = 'flex';
+                    showStatus('PDF READY.');
+                    
+                } catch(err) {                    console.error('PDF Error:', err);
+                    showStatus('ERROR: ' + err.message, true);
+                } finally {
+                    generateBtn.disabled = false;
+                    generateBtn.innerText = '[ GENERATE PDF ]';
+                }
+            });
+        });
+
+        // MOBILE-OPTIMIZED FUNCTIONS
+        function downloadPDF() {
+            try {
+                if(generatedPDF) {
+                    const pdfData = generatedPDF.output('datauristring');
+                    const link = document.createElement('a');
+                    link.href = pdfData;
+                    link.download = 'NYXO_COMPILED_DOC.pdf';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showStatus('✓ DOWNLOAD STARTED');
+                }
+            } catch(err) {
+                console.error('Download error:', err);
+                showStatus('DOWNLOAD ERROR', true);
+            }
+        }
+
+        function viewPDF() {
+            try {
+                if(pdfBlobUrl) {
+                    window.location.href = pdfBlobUrl;
+                } else {
+                    showStatus('ERROR: PDF NOT READY', true);
+                }
+            } catch(err) {
+                console.error('View error:', err);
+                showStatus('VIEW ERROR', true);
+            }
+        }
+
+        async function sharePDF() {
+            try {
+                if(!pdfBlobUrl) {
+                    showStatus('ERROR: PDF NOT READY', true);
+                    return;
+                }
+
+                if(navigator.share) {
+                    const response = await fetch(pdfBlobUrl);                    const blob = await response.blob();
+                    const file = new File([blob], 'NYXO_COMPILED_DOC.pdf', {
+                        type: 'application/pdf'
+                    });
+
+                    if(navigator.canShare && navigator.canShare({files: [file]})) {
+                        await navigator.share({
+                            title: 'Nyxo Document',
+                            text: 'Compiled by Denion',
+                            files: [file]
+                        });
+                        showStatus('✓ SHARED SUCCESSFULLY');
+                    } else {
+                        showStatus('SHARE NOT SUPPORTED - USE DOWNLOAD');
+                    }
+                } else {
+                    showStatus('SHARE NOT AVAILABLE - USE DOWNLOAD');
+                }
+            } catch(err) {
+                if(err.name !== 'AbortError') {
+                    console.error('Share error:', err);
+                    showStatus('SHARE ERROR', true);
+                }
+            }
+        }
+
+        ['dragenter','dragover','dragleave','drop'].forEach(ev => {
+            document.body.addEventListener(ev, e => e.preventDefault());
+        });
+    </script>
+</body>
+</html>
