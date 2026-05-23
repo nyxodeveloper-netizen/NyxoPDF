@@ -47,7 +47,8 @@
         }
         .header h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1rem; letter-spacing: 2px;            text-shadow: 0 0 8px var(--neon-cyan);
+            font-size: 1rem; letter-spacing: 2px;
+            text-shadow: 0 0 8px var(--neon-cyan);
         }
         .neural-status {
             font-size: 0.65rem; color: var(--neon-cyan);
@@ -74,13 +75,13 @@
 
         .kora-avatar {
             position: relative; 
-            width: 140px;
-            height: 180px;
+            width: 180px; /* AUMENTADO de 140px */
+            height: 240px; /* AUMENTADO de 180px */
             z-index: 2; 
-            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.4));
+            filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.5));
             overflow: hidden;
             border-radius: 12px;
-            border: 1px solid rgba(0, 243, 255, 0.6);
+            border: 2px solid rgba(0, 243, 255, 0.7);
             background: #000;
         }
 
@@ -96,7 +97,8 @@
             font-size: 0.65rem;
             backdrop-filter: blur(2px);
             z-index: 3;
-        }        .hud-panel h3 {
+        }
+        .hud-panel h3 {
             font-size: 0.6rem; letter-spacing: 1px; margin-bottom: 4px;
             color: var(--neon-cyan); opacity: 0.8;
             border-bottom: 1px solid rgba(0, 243, 255, 0.3); padding-bottom: 2px;
@@ -145,7 +147,8 @@
             font-size: 0.75rem; cursor: pointer; text-align: center; transition: 0.2s;
             border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 6px;
         }
-        .upload-btn:active { background: rgba(0, 243, 255, 0.2); transform: scale(0.96); }        .upload-btn svg { width: 28px; height: 28px; fill: var(--neon-cyan); filter: drop-shadow(0 0 4px var(--neon-cyan)); }
+        .upload-btn:active { background: rgba(0, 243, 255, 0.2); transform: scale(0.96); }
+        .upload-btn svg { width: 28px; height: 28px; fill: var(--neon-cyan); filter: drop-shadow(0 0 4px var(--neon-cyan)); }
         .upload-btn input { display: none; }
 
         .generate-btn {
@@ -194,7 +197,8 @@
         }
         .modal-content p {
             font-size: 0.75rem; margin-bottom: 20px; opacity: 0.7;
-        }        .modal-btn {
+        }
+        .modal-btn {
             width: 100%; padding: 14px; margin: 8px 0;
             background: rgba(0, 243, 255, 0.08); border: 1px solid var(--neon-cyan);
             color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; cursor: pointer;
@@ -243,7 +247,8 @@
             </div>
             <div class="hud-panel panel-lang">
                 <h3>PROCESS</h3>
-                <div class="lang-percent" id="lang-percent">97%</div>            </div>
+                <div class="lang-percent" id="lang-percent">97%</div>
+            </div>
         </div>
     </div>
 
@@ -292,7 +297,8 @@
                 <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
                 VIEW
             </button>
-                        <button class="modal-btn secondary" onclick="sharePDF()">
+            
+            <button class="modal-btn secondary" onclick="sharePDF()">
                 <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
                 SHARE
             </button>
@@ -341,12 +347,13 @@
                     b.style.height = Math.floor(Math.random()*80+20)+'%';
                 });
                 document.getElementById('lang-percent').innerText = (Math.random()*5+94).toFixed(1)+'%';
-            }, 700);        }
+            }, 700);
+        }
         initHUD();
 
         function showStatus(text) {
             statusMessage.classList.add('show');
-            statusText.innerHTML = `<span style="color:var(--neon-cyan)">></span> ${text}`;
+            statusText.innerHTML = `<span style="color:var(--neon-cyan)">&gt;</span> ${text}`;
             setTimeout(() => statusMessage.classList.remove('show'), 3000);
         }
 
@@ -384,13 +391,13 @@
                 '> BYPASSING SECURITY...',
                 '> ENCRYPTING DATA STREAM...',
                 '> COMPILING PDF OBJECT...',
-                '> INJECTING WATERMARK...',
-                '> WATERMARK: Compiled by Denion',
+                '> OPTIMIZING IMAGES...',
                 '> ✅ COMPILE SUCCESS.'
             ];
             let i = 0;
             const timer = setInterval(() => {
-                if(i < lines.length) {                    hackerText.innerText += lines[i] + '\n';
+                if(i < lines.length) {
+                    hackerText.innerText += lines[i] + '\n';
                     i++;
                 } else {
                     clearInterval(timer);
@@ -409,28 +416,42 @@
 
             runHackerEffect(async () => {
                 try {
-                    const pdf = new jsPDF({ format: 'a4', compress: true });
+                    const pdf = new jsPDF({ 
+                        format: 'a4', 
+                        compress: true,
+                        unit: 'mm',
+                        orientation: 'portrait'
+                    });
                     const pageW = pdf.internal.pageSize.getWidth();
                     const pageH = pdf.internal.pageSize.getHeight();
                     
                     for(let i=0; i<imagesData.length; i++) {
                         if(i>0) pdf.addPage();
                         const img = imagesData[i];
-                        const ratio = img.width/img.height;
-                        let fW, fH;
-                        if(ratio > pageW/pageH) {
-                            fW = pageW;
-                            fH = pageW/ratio;
-                        } else {
-                            fH = pageH;
-                            fW = pageH*ratio;
-                        }
-                        const format = img.name.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG';
-                        pdf.addImage(img.data, format, 0, 0, fW, fH);
+                        const imgRatio = img.width / img.height;
+                        const pageRatio = pageW / pageH;
                         
-                        pdf.setFontSize(10);
-                        pdf.setTextColor(150);
-                        pdf.text('Compiled by Denion', 5, pageH - 5);
+                        let fW, fH;
+                        
+                        // Ajuste perfecto sin espacios blancos
+                        if (imgRatio > pageRatio) {
+                            // Imagen más ancha
+                            fW = pageW;
+                            fH = pageW / imgRatio;
+                        } else {
+                            // Imagen más alta
+                            fH = pageH;
+                            fW = pageH * imgRatio;
+                        }
+                        
+                        // Centrar imagen
+                        const x = (pageW - fW) / 2;
+                        const y = (pageH - fH) / 2;
+                        
+                        const format = img.name.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG';
+                        
+                        // Imagen SIN marca de agua - limpia
+                        pdf.addImage(img.data, format, x, y, fW, fH, undefined, 'FAST');
                     }
 
                     generatedPDF = pdf;
@@ -439,7 +460,8 @@
                     resultModal.style.display = 'flex';
                     showStatus('PDF READY.');
                     
-                } catch(err) {                    console.error('PDF Error:', err);
+                } catch(err) {
+                    console.error('PDF Error:', err);
                     showStatus('ERROR: ' + err.message, true);
                 } finally {
                     generateBtn.disabled = false;
@@ -452,10 +474,11 @@
         function downloadPDF() {
             try {
                 if(generatedPDF) {
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
                     const pdfData = generatedPDF.output('datauristring');
                     const link = document.createElement('a');
                     link.href = pdfData;
-                    link.download = 'NYXO_COMPILED_DOC.pdf';
+                    link.download = `NYXO_DOCUMENT_${timestamp}.pdf`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
@@ -488,15 +511,17 @@
                 }
 
                 if(navigator.share) {
-                    const response = await fetch(pdfBlobUrl);                    const blob = await response.blob();
-                    const file = new File([blob], 'NYXO_COMPILED_DOC.pdf', {
+                    const response = await fetch(pdfBlobUrl);
+                    const blob = await response.blob();
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                    const file = new File([blob], `NYXO_DOCUMENT_${timestamp}.pdf`, {
                         type: 'application/pdf'
                     });
 
                     if(navigator.canShare && navigator.canShare({files: [file]})) {
                         await navigator.share({
                             title: 'Nyxo Document',
-                            text: 'Compiled by Denion',
+                            text: 'Compiled by Denion - Nyxo System',
                             files: [file]
                         });
                         showStatus('✓ SHARED SUCCESSFULLY');
