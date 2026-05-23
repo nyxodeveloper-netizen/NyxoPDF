@@ -167,6 +167,31 @@
             color: var(--neon-orange); margin-bottom: 8px; letter-spacing: 1px;
         }
 
+        /* CORPORATE FOOTER */
+        .corporate-footer {
+            margin-top: 12px;
+            padding: 10px;
+            text-align: center;
+            border-top: 1px solid rgba(0, 243, 255, 0.2);
+        }
+        .version-text {
+            font-size: 0.65rem;
+            color: var(--neon-cyan);
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+        .corp-text {
+            font-size: 0.6rem;
+            color: rgba(0, 243, 255, 0.6);
+            letter-spacing: 1px;
+            line-height: 1.4;
+        }
+        .corp-highlight {
+            color: var(--neon-orange);
+            font-weight: bold;
+        }
+
         .hacker-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 100; display: none;
@@ -186,6 +211,7 @@
             padding: 25px; border-radius: 12px; width: 100%; max-width: 340px; text-align: center;
             box-shadow: 0 0 40px rgba(0, 243, 255, 0.5);
             animation: modalIn 0.3s ease-out;
+            position: relative;
         }
         @keyframes modalIn {
             from { opacity: 0; transform: scale(0.9); }
@@ -211,6 +237,35 @@
         .modal-btn.secondary { border-color: var(--neon-orange); color: var(--neon-orange); }
         .modal-btn.secondary svg { fill: var(--neon-orange); filter: drop-shadow(0 0 4px var(--neon-orange)); }
         .modal-btn.secondary:hover { background: rgba(255, 94, 0, 0.15); }
+
+        /* CLOSE BUTTON X */
+        .close-modal-btn {
+            margin-top: 15px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.6);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .close-modal-btn:hover {
+            border-color: var(--neon-orange);
+            color: var(--neon-orange);
+            box-shadow: 0 0 15px rgba(255, 94, 0, 0.4);
+            transform: rotate(90deg);
+        }
+        .close-modal-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
 
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes glitch-anim {
@@ -277,6 +332,15 @@
 
         <div class="file-counter" id="file-counter">UPLOADED: 0</div>
         <button class="generate-btn" id="generate-btn" disabled>[ GENERATE PDF ]</button>
+        
+        <!-- CORPORATE FOOTER -->
+        <div class="corporate-footer">
+            <div class="version-text">NÝXO SYSTEMS v0.9.1-beta</div>
+            <div class="corp-text">
+                Advanced Neural Interface by <span class="corp-highlight">Danyøn</span><br>
+                Quantum-grade document processing powered by KORA-09 AI protocols
+            </div>
+        </div>
     </div>
 
     <div class="hacker-overlay" id="hacker-overlay">
@@ -301,6 +365,11 @@
             <button class="modal-btn secondary" onclick="sharePDF()">
                 <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
                 SHARE
+            </button>
+
+            <!-- CLOSE BUTTON X -->
+            <button class="close-modal-btn" onclick="closeModal()" title="Close & Continue">
+                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
         </div>
     </div>
@@ -415,34 +484,26 @@
 
             runHackerEffect(async () => {
                 try {
-                    // Creamos el PDF sin formato fijo inicial
                     const pdf = new jsPDF({ unit: 'mm' });
-                    // Eliminamos la página vacía que crea jsPDF por defecto
                     pdf.deletePage(1);
 
-                    const maxDimMm = 250; // Tamaño máximo para evitar archivos gigantes
+                    const maxDimMm = 250;
 
                     for(let i=0; i<imagesData.length; i++) {
                         const img = imagesData[i];
-                        
-                        // Calculamos la relación de aspecto exacta
                         const ratio = img.width / img.height;
                         let pageW, pageH;
 
-                        // Si la imagen es más ancha que alta
                         if (ratio >= 1) {
                             pageW = maxDimMm;
                             pageH = maxDimMm / ratio;
                         } else {
-                            // Si la imagen es más alta que ancha (vertical)
                             pageH = maxDimMm;
                             pageW = maxDimMm * ratio;
                         }
 
-                        // Creamos la página con el tamaño EXACTO de la foto
                         pdf.addPage([pageW, pageH]);
                         
-                        // Colocamos la imagen llenando toda la página (0,0)
                         const format = img.name.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG';
                         pdf.addImage(img.data, format, 0, 0, pageW, pageH);
                     }
@@ -463,7 +524,18 @@
             });
         });
 
-        // MOBILE-OPTIMIZED FUNCTIONS
+        // NEW: Close Modal Function
+        function closeModal() {
+            resultModal.style.display = 'none';
+            // Resetear para nuevo PDF
+            imagesData = [];
+            generatedPDF = null;
+            pdfBlobUrl = null;
+            fileCounter.innerText = 'UPLOADED: 0';
+            generateBtn.disabled = true;
+            showStatus('SYSTEM READY - UPLOAD NEW FILES');
+        }
+
         function downloadPDF() {
             try {
                 if(generatedPDF) {
